@@ -3308,4 +3308,7 @@ that describe key bindings.  That is why the default is nil.  */);
   defsubr (&Stext_char_description);
   defsubr (&Swhere_is_internal);
   defsubr (&Sdescribe_buffer_bindings);
+
+  DEFSYM (Qkey_parse, "key-parse");
+  DEFSYM (Qkey_valid_p, "key-valid-p");
 }
