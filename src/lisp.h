@@ -1094,6 +1094,7 @@ enum pvec_type
   PVEC_MUTEX,
   PVEC_CONDVAR,
   PVEC_MODULE_FUNCTION,
+  PVEC_SQLITE,
 
   /* These should be last, check internal_equal to see why.  */
   PVEC_COMPILED,
@@ -2575,6 +2576,17 @@ xmint_pointer (Lisp_Object a)
   return XUNTAG (a, Lisp_Vectorlike, struct Lisp_Misc_Ptr)->pointer;
 }
 
+struct Lisp_Sqlite
+{
+  union vectorlike_header header;
+  void *db;
+  void *stmt;
+  char *name;
+  void (*finalizer) (void *);
+  bool eof;
+  bool is_statement;
+} GCALIGNED_STRUCT;
+
 struct Lisp_User_Ptr
 {
   union vectorlike_header header;
@@ -2653,9 +2665,34 @@ XUSER_PTR (Lisp_Object a)
 }
 
 INLINE bool
+SQLITEP (Lisp_Object x)
+{
+  return PSEUDOVECTORP (x, PVEC_SQLITE);
+}
+
+INLINE bool
 BIGNUMP (Lisp_Object x)
 {
   return PSEUDOVECTORP (x, PVEC_BIGNUM);
+}
+
+INLINE bool
+SQLITE (Lisp_Object a)
+{
+  return PSEUDOVECTORP (a, PVEC_SQLITE);
+}
+
+INLINE void
+CHECK_SQLITE (Lisp_Object x)
+{
+  CHECK_TYPE (SQLITE (x), Qsqlitep, x);
+}
+
+INLINE struct Lisp_Sqlite *
+XSQLITE (Lisp_Object a)
+{
+  eassert (SQLITEP (a));
+  return XUNTAG (a, Lisp_Vectorlike, struct Lisp_Sqlite);
 }
 
 INLINE bool
@@ -3628,6 +3665,7 @@ extern Lisp_Object detect_coding_system (const unsigned char *, ptrdiff_t,
 extern void init_coding (void);
 extern void init_coding_once (void);
 extern void syms_of_coding (void);
+extern bool string_ascii_p (Lisp_Object);
 
 /* Defined in character.c.  */
 extern ptrdiff_t chars_in_text (const unsigned char *, ptrdiff_t);
@@ -3800,6 +3838,9 @@ extern void init_xdisp (void);
 extern Lisp_Object safe_eval (Lisp_Object);
 extern bool pos_visible_p (struct window *, ptrdiff_t, int *,
 			   int *, int *, int *, int *, int *);
+
+/* Defined in sqlite.c.  */
+extern void syms_of_sqlite (void);
 
 /* Defined in xsettings.c.  */
 extern void syms_of_xsettings (void);

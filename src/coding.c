@@ -9471,6 +9471,17 @@ not fully specified.)  */)
   return code_convert_region (start, end, coding_system, destination, 1, 0);
 }
 
+/* Whether STRING only contains chars in the 0..127 range.  */
+bool
+string_ascii_p (Lisp_Object string)
+{
+  ptrdiff_t nbytes = SBYTES (string);
+  for (ptrdiff_t i = 0; i < nbytes; i++)
+    if (SREF (string, i) > 127)
+      return false;
+  return true;
+}
+
 Lisp_Object
 code_convert_string (Lisp_Object string, Lisp_Object coding_system,
 		     Lisp_Object dst_object, bool encodep, bool nocopy,
