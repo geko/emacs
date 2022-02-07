@@ -448,6 +448,7 @@ OPTION_DEFAULT_ON([tiff],[don't compile with TIFF image support])
 OPTION_DEFAULT_ON([gif],[don't compile with GIF image support])
 OPTION_DEFAULT_ON([png],[don't compile with PNG image support])
 OPTION_DEFAULT_ON([rsvg],[don't compile with SVG image support])
+OPTION_DEFAULT_ON([sqlite3],[don't compile with sqlite3 support])
 OPTION_DEFAULT_ON([lcms2],[don't compile with Little CMS support])
 OPTION_DEFAULT_ON([libsystemd],[don't compile with libsystemd support])
 OPTION_DEFAULT_ON([cairo],[don't compile with Cairo drawing])
@@ -2588,6 +2589,27 @@ if test "${HAVE_X11}" = "yes" || test "${HAVE_NS}" = "yes" || test "${opsys}" = 
       fi
     fi
   fi
+fi
+
+### Use -lsqlite3 if available, unless '--with-sqlite3=no'
+HAVE_SQLITE3=no
+if test "${with_sqlite3}" != "no"; then
+   AC_CHECK_LIB(sqlite3, sqlite3_open_v2, HAVE_SQLITE3=yes, HAVE_SQLITE3=no)
+   if test "$HAVE_SQLITE3" = "yes"; then
+     SQLITE3_LIBS=-lsqlite3
+     AC_SUBST(SQLITE3_LIBS)
+     LIBS="$SQLITE3_LIBS $LIBS"
+     AC_DEFINE(HAVE_SQLITE3, 1, [Define to 1 if you have the libsqlite3 library (-lsqlite).])
+     # Windows loads libsqlite dynamically
+     if test "${opsys}" = "mingw32"; then
+        SQLITE3_LIBS=
+     fi
+     AC_CHECK_LIB(sqlite3, sqlite3_load_extension,
+         HAVE_SQLITE3_LOAD_EXTENSION=yes, HAVE_SQLITE3_LOAD_EXTENSION=no)
+     if test "$HAVE_SQLITE3_LOAD_EXTENSION" = "yes"; then
+       AC_DEFINE(HAVE_SQLITE3_LOAD_EXTENSION, 1, [Define to 1 if sqlite3 supports loading extensions.])
+     fi
+   fi
 fi
 
 HAVE_IMAGEMAGICK=no
@@ -5908,7 +5930,7 @@ emacs_config_features=
 for opt in ACL CAIRO DBUS FREETYPE GCONF GIF GLIB GMP GNUTLS GPM GSETTINGS \
  HARFBUZZ IMAGEMAGICK JPEG JSON LCMS2 LIBOTF LIBSELINUX LIBSYSTEMD LIBXML2 \
  M17N_FLT MODULES NATIVE_COMP NOTIFY NS OLDXMENU PDUMPER PNG RSVG SECCOMP \
- SOUND THREADS TIFF \
+ SOUND SQLITE3 THREADS TIFF \
  TOOLKIT_SCROLL_BARS UNEXEC X11 XAW3D XDBE XFT XIM XPM XWIDGETS X_TOOLKIT \
  ZLIB; do
 
@@ -5954,6 +5976,7 @@ AS_ECHO(["  Does Emacs use -lXaw3d?                                 ${HAVE_XAW3D
   Does Emacs use a gif library?                           ${HAVE_GIF} $LIBGIF
   Does Emacs use a png library?                           ${HAVE_PNG} $LIBPNG
   Does Emacs use -lrsvg-2?                                ${HAVE_RSVG}
+  Does Emacs use -lsqlite3?                               ${HAVE_SQLITE3}
   Does Emacs use cairo?                                   ${HAVE_CAIRO}
   Does Emacs use -llcms2?                                 ${HAVE_LCMS2}
   Does Emacs use imagemagick?                             ${HAVE_IMAGEMAGICK}
